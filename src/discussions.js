@@ -35,5 +35,5 @@ export const migrateDiscussions = async (phpbbConnection, flarumConnection) => {
   });
 
   console.log(`Discussions migration completed`);
-  console.log({ migratedDiscussions, ignoredDiscussions, failedDiscussions: failedDiscussions.length });
+  console.log({ migratedDiscussions, failedDiscussions: failedDiscussions.length });
 }

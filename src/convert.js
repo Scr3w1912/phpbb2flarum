@@ -9,7 +9,7 @@ import { migrateDiscussions } from "./discussions";
 
 // Configurazioni
 
-export const debugQuery = true;
+export const debugQuery = false;
 
 export const FLARUM_DB_NAME = "flarum";
 export const FLARUM_DB_PREFIX = "flarum_";
@@ -22,7 +22,6 @@ const MYSQL_CONFIG = {
   user: "root",
   password: "",
 };
-
 
 (async () => {
   try {
@@ -38,9 +37,9 @@ const MYSQL_CONFIG = {
       SET FOREIGN_KEY_CHECKS=0
     `);
 
-    //await migrateUsers(phpbbConnection, flarumConnection);
-    //await migrateCategories(phpbbConnection, flarumConnection);
-    //await migrateTopics(phpbbConnection, flarumConnection);
+    await migrateUsers(phpbbConnection, flarumConnection);
+    await migrateCategories(phpbbConnection, flarumConnection);
+    await migrateTopics(phpbbConnection, flarumConnection);
     await migrateDiscussions(phpbbConnection, flarumConnection);
 
     flarumConnection.end();

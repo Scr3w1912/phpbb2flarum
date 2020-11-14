@@ -15,7 +15,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
   let migratedTopics = 0;
   let failedTopics = [];
 
-  await asyncForEach(topics, async (topic, index) => {
+  await asyncForEach(topics, async (topic) => {
     const { topic_id, topic_title, topic_time, topic_poster, forum_id } = topic;
 
     console.log(`  Migrating Topic: ${topic_id} ${topic_title}`);
@@ -32,29 +32,24 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
     await asyncForEach(posts, async (post, index) => {
 
-      const { post_id, post_username, post_time, post_text, } = post;
+      const { post_id, post_time, post_text, poster_id } = post;
 
-      console.log(`    Migrating Post: ${post_id}`);
+      console.log({ poster_id });
 
-      let posterID = 0;
-      const postDate = moment(post_time).format('YYYY-MM-DD hh:mm:ss');
+      const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
       const postText = sqlEscape(formatPost(post_text));
 
-      if (!post_username) {
-        posterID = post_id;
-
-        if (!participants.includes(posterID))
-          participants.push(posterID)
-      }
+      if (!participants.includes(poster_id))
+        participants.push(poster_id)
 
       if (index === posts.length)
-        lastPosterID = posterID;
+        lastPosterID = poster_id;
 
       try {
 
         const result = await query(flarumConnection, `
           INSERT INTO ${FLARUM_DB_PREFIX}posts (id, user_id, discussion_id, created_at, type, content)
-          VALUES ('${post_id}', '${posterID}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
+          VALUES ('${post_id}', '${poster_id}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
         );
 
         if (result) migratedPosts++;
@@ -70,7 +65,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
     // Converti i topic nel formato di Flarum
 
-    const date = moment(topic_time).format('YYYY-MM-DD hh:mm:ss');
+    const date = moment.unix(topic_time).format('YYYY-MM-DD hh:mm:ss');
 
     // Linka il topic al tag
 
@@ -114,7 +109,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     try {
       const result = await query(flarumConnection, `
         INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
-        VALUES('${topic_id}', '${topic_title}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
+        VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
       `);
 
       if (result) migratedTopics++;

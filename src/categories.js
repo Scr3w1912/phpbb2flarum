@@ -5,7 +5,10 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
 
   console.log(`Converting Categories to tags`);
 
-  const categories = await query(phpbbConnection, `SELECT forum_id, forum_name, forum_desc  FROM ${PHPBB_DB_PREFIX}forums`)
+  const categories = await query(phpbbConnection, `
+    SELECT forum_id, forum_name, forum_desc
+    FROM ${PHPBB_DB_PREFIX}forums
+  `)
 
   let migratedCategories = 0;
   let failedCategories = [];
