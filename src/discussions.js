@@ -30,6 +30,6 @@ export const migrateDiscussions = async (phpbbConnection, flarumConnection) => {
   console.log(`Migrated ${migratedDiscussions} discussions`);
   if (failedDiscussions.length > 0) {
     console.log("Failed Discussions");
-    console.table({ failedDiscussions });
+    console.table(failedDiscussions);
   }
 }

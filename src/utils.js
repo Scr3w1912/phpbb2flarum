@@ -40,8 +40,6 @@ export const query = (connection, sql) => new Promise((resolve, reject) => {
 
 export const unixTimestamp = () => Math.round((new Date()).getTime() / 1000);
 
-export const randomColor = () => Math.floor(Math.random() * 16777215).toString(16);
-
 export const stripTags = (string) => string.replace(/(<([^>]+)>)/gi, "");
 
 export const stripBBCode = (string) => string.replace(/\[(\w+)[^w]*?](.*?)\[\/\1]/g, '$2');
@@ -124,4 +122,13 @@ export const asyncForEach = async (array, callback) => {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
+}
+
+export const randomColor = () => {
+  const tagColors = [
+    "#F44336", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5", "#2196F3", "#03A9F4", "#00BCD4", "#009688",
+    "#4CAF50", "#8BC34A", "#CDDC39", "#FFC107", "#FF9800", "#FF5722", "#795548", "#607D8BF", "#374046",
+  ];
+
+  return tagColors[Math.round(Math.random() * tagColors.length)]
 }
