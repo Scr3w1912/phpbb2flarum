@@ -37,10 +37,10 @@ const MYSQL_CONFIG = {
       SET FOREIGN_KEY_CHECKS=0
     `);
 
-    //await migrateUsers(phpbbConnection, flarumConnection);
+    await migrateUsers(phpbbConnection, flarumConnection);
     await migrateCategories(phpbbConnection, flarumConnection);
-    //await migrateTopics(phpbbConnection, flarumConnection);
-    //await migrateDiscussions(phpbbConnection, flarumConnection);
+    await migrateTopics(phpbbConnection, flarumConnection);
+    await migrateDiscussions(phpbbConnection, flarumConnection);
 
     flarumConnection.end();
     phpbbConnection.end();
