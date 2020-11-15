@@ -13,12 +13,12 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
   `);
 
   let migratedTopics = 0;
-  let failedTopics = [];
+  const failedTopics = [];
+  const failedLinks = [];
+  const failedPosts = [];
 
   await asyncForEach(topics, async (topic) => {
     const { topic_id, topic_title, topic_time, topic_poster, forum_id } = topic;
-
-    console.log(`  Migrating Topic: ${topic_id} ${topic_title}`);
 
     const participants = [];
     let lastPosterID = 0;
@@ -27,14 +27,9 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       SELECT * FROM ${PHPBB_DB_PREFIX}posts WHERE topic_id = '${parseInt(topic_id)}'
     `);
 
-    let migratedPosts = 0;
-    let failedPosts = [];
-
     await asyncForEach(posts, async (post, index) => {
 
       const { post_id, post_time, post_text, poster_id } = post;
-
-      console.log({ poster_id });
 
       const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
       const postText = sqlEscape(formatPost(post_text));
@@ -48,22 +43,17 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       try {
 
         const result = await query(flarumConnection, `
-          INSERT INTO ${FLARUM_DB_PREFIX}posts (id, user_id, discussion_id, created_at, type, content)
-          VALUES ('${post_id}', '${poster_id}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
+           INSERT INTO ${FLARUM_DB_PREFIX}posts (id, user_id, discussion_id, created_at, type, content)
+           VALUES ('${post_id}', '${poster_id}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
         );
 
-        if (result) migratedPosts++;
-        else failedPosts.push(post);
+        if (!result)
+          failedPosts.push({ post_id, topic_id, poster_id });
 
       } catch (err) {
-        failedPosts.push(post);
+        failedPosts.push({ post_id, topic_id, poster_id });
       }
     });
-
-    console.log(`  Topic Posts migration completed`);
-    console.log({ migratedPosts, failedPosts: failedTopics.length });
-
-    // Converti i topic nel formato di Flarum
 
     const date = moment.unix(topic_time).format('YYYY-MM-DD hh:mm:ss');
 
@@ -76,30 +66,28 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       );
 
     } catch (error) {
-      console.log(`Failed linking topic '${topic_id}' to tag '${forum_id}'`);
-      console.log(error?.sqlMessage);
+      failedLinks.push({ topic: topic_id, tag: forum_id, reason: error?.sqlMessage })
     }
 
-    // Controlla se abbiamo il parent
+    // Link il topic anche al parent del tag (se presente)
 
-    const parentForum = await query(phpbbConnection,
+    const parents = await query(phpbbConnection,
       `SELECT parent_id FROM ${PHPBB_DB_PREFIX}forums WHERE forum_id = '${forum_id}'`);
 
-    if (parentForum?.parent_id) {
+    await asyncForEach(parents, async (parent) => {
+      const { parent_id } = parent;
 
-      //$topicid = $topic["topic_id"];
       try {
-
         await query(flarumConnection, `
           INSERT INTO ${FLARUM_DB_PREFIX}discussion_tag (discussion_id, tag_id)
-          VALUES('${topic_id}', '${parentForum.parent_id}')`
+          VALUES('${topic_id}', '${parent_id}')`
         );
 
       } catch (error) {
         console.log(`Topic parent linking error: ${error?.sqlMessage}`);
         console.log(error?.sqlMessage);
       }
-    }
+    });
 
     if (lastPosterID == 0)
       lastPosterID = topic_poster;
@@ -108,9 +96,9 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
     try {
       const result = await query(flarumConnection, `
-        INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
-        VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
-      `);
+            INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
+            VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
+          `);
 
       if (result) migratedTopics++;
       else failedTopics.push(topic);
@@ -118,12 +106,24 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     } catch (err) {
       failedTopics.push(topic);
     }
-
   });
 
   console.log("")
-  console.log(`Topics migration completed`);
-  console.log({ migratedTopics, failedTopics: failedTopics.length });
+  console.log(`Migrated ${migratedTopics} topics`);
 
+  if (failedTopics.length > 0) {
+    console.log("Failed Topics:");
+    console.table(failedTopics);
+  }
+
+  if (failedLinks.length > 0) {
+    console.log("Failed Links:");
+    console.table(failedLinks);
+  }
+
+  if (failedPosts.length > 0) {
+    console.log("Failed Posts:");
+    console.table(failedPosts);
+  }
 }
 

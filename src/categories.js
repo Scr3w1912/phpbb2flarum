@@ -6,7 +6,7 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
   console.log(`Converting Categories to tags`);
 
   const categories = await query(phpbbConnection, `
-    SELECT forum_id, forum_name, forum_desc
+    SELECT forum_id, forum_name, forum_desc, parent_id
     FROM ${PHPBB_DB_PREFIX}forums
   `)
 
@@ -15,7 +15,7 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
 
   categories.forEach((category, index) => {
 
-    const { forum_id, forum_name, forum_desc } = category;
+    const { forum_id, forum_name, forum_desc, parent_id } = category;
 
     const slug = sqlEscape(slugify(forum_name));
     const name = sqlEscape(forum_name);
@@ -24,8 +24,8 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
     const position = index;
 
     query(flarumConnection, `
-      INSERT INTO ${FLARUM_DB_PREFIX}tags (id, name, description, slug, color, position)
-      VALUES ( '${forum_id}', '${name}', '${description}', '${slug}', '${color}', '${position}')`
+      INSERT INTO ${FLARUM_DB_PREFIX}tags (id, name, description, slug, color, position, parent_id)
+      VALUES ( '${forum_id}', '${name}', '${description}', '${slug}', '${color}', '${position}', '${parent_id}')`
 
     ).then(() => {
       migratedCategories++;
@@ -42,7 +42,7 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
         migratedCategories++;
 
       }).catch(() => {
-        failedCategories.push(category);
+        failedCategories.push({ id: forum_id, name, slug });
       })
     });
 
@@ -55,8 +55,12 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
     clearInterval(interval);
 
     console.log("")
-    console.log(`Categories migration completed`);
-    console.log({ migratedCategories, failedCategories: failedCategories.length });
+    console.log(`Migrated ${migratedCategories} categories`);
+    if (failedCategories.length > 0) {
+      console.logtable("Failed Categories");
+      console.table({ failedCategories });
+    }
+
     console.log("")
 
     resolve();

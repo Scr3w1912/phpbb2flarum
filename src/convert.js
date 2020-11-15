@@ -14,7 +14,7 @@ export const debugQuery = false;
 export const FLARUM_DB_NAME = "flarum";
 export const FLARUM_DB_PREFIX = "flarum_";
 
-export const PHPBB_DB_NAME = "psiconauti";
+export const PHPBB_DB_NAME = "psiconauti2";
 export const PHPBB_DB_PREFIX = "phpbb_";
 
 const MYSQL_CONFIG = {
@@ -37,10 +37,10 @@ const MYSQL_CONFIG = {
       SET FOREIGN_KEY_CHECKS=0
     `);
 
-    await migrateUsers(phpbbConnection, flarumConnection);
-    await migrateCategories(phpbbConnection, flarumConnection);
+    //await migrateUsers(phpbbConnection, flarumConnection);
+    //await migrateCategories(phpbbConnection, flarumConnection);
     await migrateTopics(phpbbConnection, flarumConnection);
-    await migrateDiscussions(phpbbConnection, flarumConnection);
+    //await migrateDiscussions(phpbbConnection, flarumConnection);
 
     flarumConnection.end();
     phpbbConnection.end();

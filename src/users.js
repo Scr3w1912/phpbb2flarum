@@ -5,7 +5,7 @@ import { query, unixTimestamp } from "./utils";
 export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(async resolve => {
   console.log(`Migrating users`);
 
-  const users = await query(phpbbConnection, `SELECT user_id, user_regdate, username_clean, user_email FROM ${PHPBB_DB_PREFIX}users`)
+  const users = await query(phpbbConnection, `SELECT user_id, user_regdate, username, username_clean, user_email FROM ${PHPBB_DB_PREFIX}users`)
 
   let ignoredUsers = 0;
   let migratedUsers = 0;
@@ -18,19 +18,23 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
       return;
     }
 
-    const { username_clean, user_id, user_regdate, user_email = null } = user
-    const username = username_clean.replaceAll(" ", "");
+    const { username, username_clean, user_id, user_regdate, user_email = null } = user
+
+    const formattedUsername = username
+      ? username.replaceAll(" ", "")
+      : username_clean.replaceAll(" ", "");
+
     const password = unixTimestamp();
 
     query(flarumConnection, `
       INSERT INTO ${FLARUM_DB_PREFIX}users (id, username, email, password, joined_at, is_email_confirmed)
-      VALUES ('${user_id}', '${username}', '${user_email}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1)`
+      VALUES ('${user_id}', '${formattedUsername}', '${user_email}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1)`
 
     ).then(() => {
       migratedUsers++;
 
     }).catch(() => {
-      failedUsers.push(user);
+      failedUsers.push({ user_id, username, user_email });
     });
   });
 
@@ -40,9 +44,11 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
 
     clearInterval(interval);
 
-    console.log(`Users migration completed`);
-    console.log({ migratedUsers, ignoredUsers, failedUsers: failedUsers.length });
-    console.log("")
+    console.log(`Migrated ${migratedUsers} users, ignored: ${ignoredUsers}`);
+    if (failedUsers.length > 0) {
+      console.log("Failed Users:")
+      console.table(failedUsers);
+    }
 
     resolve();
 
