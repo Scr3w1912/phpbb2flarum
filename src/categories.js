@@ -45,6 +45,7 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
     if (parent_id > 0)
       await recursiveSlug(parent_id);
 
+    slugs.push(forum_id)
     const formattedSlug = sqlEscape(slugify(slugs.reverse().join("-")));
 
     query(flarumConnection, `
