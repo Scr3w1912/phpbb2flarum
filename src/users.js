@@ -27,9 +27,17 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
 
     const password = unixTimestamp();
 
+    let userAvatar = ""
+
+    if (user_avatar.includes("http"))
+      userAvatar = user_avatar;
+    else {
+      userAvatar = user_avatar.substr(0, user_avatar.indexOf("_")) + "." + user_avatar.substr(user_avatar.lastIndexOf(".") + 1);
+    }
+
     query(flarumConnection, `
       INSERT INTO ${FLARUM_DB_PREFIX}users (id, username, email, password, joined_at, is_email_confirmed, avatar_url)
-      VALUES ('${user_id}', '${formattedUsername}', '${user_email}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1, '${user_avatar}')`
+      VALUES ('${user_id}', '${formattedUsername}', '${user_email}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1, '${userAvatar}')`
 
     ).then(() => {
       migratedUsers++;
@@ -40,7 +48,7 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
 
       query(flarumConnection, `
         INSERT INTO ${FLARUM_DB_PREFIX}users (id, username, email, password, joined_at, is_email_confirmed, avatar_url)
-        VALUES ('${user_id}', '${formattedUsername + "ID" + user_id}', '${user_email + "ID" + user_id}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1, '${user_avatar}')`
+        VALUES ('${user_id}', '${formattedUsername + "ID" + user_id}', '${user_email + "ID" + user_id}', '${password}', '${moment.unix(user_regdate).format("YYYY-MM-DD hh:mm:ss")}', 1, '${userAvatar}')`
 
       ).then(() => {
         migratedUsers++;

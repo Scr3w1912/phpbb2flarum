@@ -16,6 +16,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
   let migratedTopics = 0;
   let migratedPosts = 0;
+
   const failedTopics = [];
   const failedLinks = [];
   const failedPosts = [];

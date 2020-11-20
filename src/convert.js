@@ -15,6 +15,7 @@ export const FLARUM_DB_NAME = "flarum";
 export const FLARUM_DB_PREFIX = "flarum_";
 export const PHPBB_DB_NAME = "psiconauti2";
 export const PHPBB_DB_PREFIX = "phpbb_";
+export const PHPBB_AVATAR_PREFIX = "gm6yzwjxa9q6l8g3lzobexpgawa5keu3"
 
 const MYSQL_CONFIG = {
   host: "localhost",
@@ -36,7 +37,7 @@ const MYSQL_CONFIG = {
       SET FOREIGN_KEY_CHECKS=0
     `);
 
-    //await migrateUsers(phpbbConnection, flarumConnection);
+    await migrateUsers(phpbbConnection, flarumConnection);
     await migrateCategories(phpbbConnection, flarumConnection);
     await migrateTopics(phpbbConnection, flarumConnection);
     await migrateDiscussions(phpbbConnection, flarumConnection);
