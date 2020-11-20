@@ -1,5 +1,5 @@
 import moment from "moment";
-import { FLARUM_DB_PREFIX, PHPBB_DB_PREFIX } from "./convert";
+import { FLARUM_DB_PREFIX, PHPBB_AVATAR_PREFIX, PHPBB_DB_PREFIX } from "./convert";
 import { query, unixTimestamp } from "./utils";
 
 export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(async resolve => {
@@ -29,10 +29,8 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
 
     let userAvatar = ""
 
-    if (user_avatar.includes("http"))
-      userAvatar = user_avatar;
-    else {
-      userAvatar = user_avatar.substr(0, user_avatar.indexOf("_")) + "." + user_avatar.substr(user_avatar.lastIndexOf(".") + 1);
+    if (!user_avatar.includes("http")) {
+      userAvatar = PHPBB_AVATAR_PREFIX + user_avatar.substr(0, user_avatar.indexOf("_")) + "." + user_avatar.substr(user_avatar.lastIndexOf(".") + 1);
     }
 
     query(flarumConnection, `
