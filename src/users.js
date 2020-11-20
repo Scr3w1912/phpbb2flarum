@@ -38,7 +38,7 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
     }
 
     const discussions = await query(phpbbConnection, `
-      SELECT * FROM ${PHPBB_DB_PREFIX}discussions_user WHERE user_id = '${parseInt(user_id)}'
+      SELECT * FROM ${PHPBB_DB_PREFIX}discussion_user WHERE user_id = '${parseInt(user_id)}'
     `);
 
     const comments = await query(phpbbConnection, `
