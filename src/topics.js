@@ -16,6 +16,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
   let migratedTopics = 0;
   let migratedPosts = 0;
+  let deletedPosts = 0;
 
   const failedTopics = [];
   const failedLinks = [];
@@ -33,7 +34,10 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
     await asyncForEach(posts, async (post, index) => {
 
-      const { post_id, post_time, post_text, poster_id } = post;
+      const { post_id, post_time, post_text, poster_id, post_delete_time } = post;
+
+      if (!!post_delete_time)
+        return deletedPosts++;
 
       const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
       const postText = sqlEscape(formatPost(post_text));
@@ -114,7 +118,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     }
   });
 
-  console.log(`Migrated ${migratedTopics} topics with ${migratedPosts} posts`);
+  console.log(`Migrated ${migratedTopics} topics with ${migratedPosts} posts. Ignored deleted posts (${deletedPosts})`);
 
   if (failedTopics.length > 0) {
     console.log("Failed Topics:");
