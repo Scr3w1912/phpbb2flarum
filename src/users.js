@@ -1,4 +1,5 @@
 import moment from "moment";
+import { async } from "regenerator-runtime";
 import { FLARUM_DB_PREFIX, PHPBB_AVATAR_PREFIX, PHPBB_DB_PREFIX } from "./convert";
 import { query, unixTimestamp } from "./utils";
 
@@ -14,7 +15,7 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
   let failedUsers = [];
   let modifiedUsers = []
 
-  users.forEach((user) => {
+  users.forEach(async (user) => {
 
     if (!user.user_email) {
       ignoredUsers++;
