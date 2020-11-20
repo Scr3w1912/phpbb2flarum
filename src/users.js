@@ -37,12 +37,12 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
       userAvatar = PHPBB_AVATAR_PREFIX + user_avatar.substr(0, user_avatar.indexOf("_")) + "." + user_avatar.substr(user_avatar.lastIndexOf(".") + 1);
     }
 
-    const discussions = await query(phpbbConnection, `
-      SELECT * FROM ${PHPBB_DB_PREFIX}discussion_user WHERE user_id = '${parseInt(user_id)}'
+    const discussions = await query(flarumConnection, `
+      SELECT * FROM ${FLARUM_DB_PREFIX}discussion_user WHERE user_id = '${parseInt(user_id)}'
     `);
 
-    const comments = await query(phpbbConnection, `
-      SELECT * FROM ${PHPBB_DB_PREFIX}posts WHERE user_id = '${parseInt(user_id)}'
+    const comments = await query(flarumConnection, `
+      SELECT * FROM ${FLARUM_DB_PREFIX}posts WHERE user_id = '${parseInt(user_id)}'
     `);
 
     query(flarumConnection, `
