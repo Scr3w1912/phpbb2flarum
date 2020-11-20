@@ -29,7 +29,10 @@ export const migrateUsers = (phpbbConnection, flarumConnection) => new Promise(a
 
     let userAvatar = ""
 
-    if (!user_avatar.includes("http")) {
+    if (user_avatar.includes("http")) {
+      if (user_avatar.length > 99)
+        userAvatar = "";
+    } else {
       userAvatar = PHPBB_AVATAR_PREFIX + user_avatar.substr(0, user_avatar.indexOf("_")) + "." + user_avatar.substr(user_avatar.lastIndexOf(".") + 1);
     }
 
