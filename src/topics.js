@@ -12,7 +12,10 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     ORDER BY topic_id DESC;
   `);
 
+  console.log(`Found ${topics.length} entries`);
+
   let migratedTopics = 0;
+  let migratedPosts = 0;
   const failedTopics = [];
   const failedLinks = [];
   const failedPosts = [];
@@ -49,9 +52,11 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
         if (!result)
           failedPosts.push({ post_id, topic_id, poster_id });
+        else
+          migratedPosts++;
 
-      } catch (err) {
-        failedPosts.push({ post_id, topic_id, poster_id });
+      } catch (error) {
+        failedPosts.push({ post_id, topic_id, poster_id, error: error.message });
       }
     });
 
@@ -66,7 +71,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       );
 
     } catch (error) {
-      failedLinks.push({ topic: topic_id, tag: forum_id, reason: error?.sqlMessage })
+      failedLinks.push({ topic: topic_id, tag: forum_id, reason: error?.sqlMessage, error: error.message })
     }
 
     // Link il topic anche al parent del tag (se presente)
@@ -96,20 +101,19 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
     try {
       const result = await query(flarumConnection, `
-            INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
-            VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
-          `);
+        INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
+        VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
+      `);
 
       if (result) migratedTopics++;
-      else failedTopics.push(topic);
+      else failedTopics.push({ ...topic });
 
-    } catch (err) {
-      failedTopics.push(topic);
+    } catch (error) {
+      failedTopics.push({ ...topic, error: error.message });
     }
   });
 
-  console.log("")
-  console.log(`Migrated ${migratedTopics} topics`);
+  console.log(`Migrated ${migratedTopics} topics with ${migratedPosts} posts`);
 
   if (failedTopics.length > 0) {
     console.log("Failed Topics:");

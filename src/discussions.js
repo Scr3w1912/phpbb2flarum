@@ -6,6 +6,8 @@ export const migrateDiscussions = async (phpbbConnection, flarumConnection) => {
 
   const discussions = await query(phpbbConnection, `SELECT user_id, topic_id FROM ${PHPBB_DB_PREFIX}topics_posted`);
 
+  console.log(`Found ${discussions.length} entries`);
+
   let migratedDiscussions = 0;
   let failedDiscussions = [];
 
@@ -22,8 +24,8 @@ export const migrateDiscussions = async (phpbbConnection, flarumConnection) => {
       if (result) migratedDiscussions++;
       else failedDiscussions.push(discussion);
 
-    } catch (err) {
-      failedDiscussions.push(discussion);
+    } catch (error) {
+      failedDiscussions.push({ ...discussion, error: error.message });
     }
   });
 

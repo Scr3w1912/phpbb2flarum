@@ -10,6 +10,7 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
     FROM ${PHPBB_DB_PREFIX}forums
   `);
 
+  console.log(`Found ${categories.length} entries`);
 
   let migratedCategories = 0;
   let failedCategories = [];
@@ -55,8 +56,8 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
     ).then(() => {
       migratedCategories++;
 
-    }).catch(() => {
-      failedCategories.push({ id: forum_id, name, slug: formattedSlug });
+    }).catch((error) => {
+      failedCategories.push({ id: forum_id, name, slug: formattedSlug, error: error.message });
     });
 
   });
@@ -67,14 +68,11 @@ export const migrateCategories = (phpbbConnection, flarumConnection) => new Prom
 
     clearInterval(interval);
 
-    console.log("")
     console.log(`Migrated ${migratedCategories} categories`);
     if (failedCategories.length > 0) {
       console.log("Failed Categories");
       console.table(failedCategories);
     }
-
-    console.log("")
 
     resolve();
 
