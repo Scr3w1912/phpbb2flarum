@@ -39,29 +39,30 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       if (!!post_delete_time)
         return deletedPosts++;
 
+      const posterId = poster_id === 1 ? 99999999 : poster_id;
       const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
       const postText = sqlEscape(formatPost(post_text));
 
-      if (!participants.includes(poster_id))
-        participants.push(poster_id)
+      if (!participants.includes(posterId))
+        participants.push(posterId)
 
       if (index === posts.length)
-        lastPosterID = poster_id;
+        lastPosterID = posterId;
 
       try {
 
         const result = await query(flarumConnection, `
            INSERT INTO ${FLARUM_DB_PREFIX}posts (id, user_id, discussion_id, created_at, type, content)
-           VALUES ('${post_id}', '${poster_id}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
+           VALUES ('${post_id}', '${posterId}', '${topic_id}', '${postDate}', 'comment', '${postText}')`
         );
 
         if (!result)
-          failedPosts.push({ post_id, topic_id, poster_id });
+          failedPosts.push({ post_id, topic_id, posterId });
         else
           migratedPosts++;
 
       } catch (error) {
-        failedPosts.push({ post_id, topic_id, poster_id, error: error.message });
+        failedPosts.push({ post_id, topic_id, posterId, error: error.message });
       }
     });
 

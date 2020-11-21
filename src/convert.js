@@ -6,6 +6,7 @@ import { migrateCategories } from "./categories";
 import { migrateTopics } from "./topics";
 import { migrateUsers } from "./users";
 import { migrateDiscussions } from "./discussions";
+import { migrateUsersStats } from "./usersStats";
 
 // Configurazioni
 
@@ -37,10 +38,11 @@ const MYSQL_CONFIG = {
       SET FOREIGN_KEY_CHECKS=0
     `);
 
+    await migrateUsers(phpbbConnection, flarumConnection);
     await migrateCategories(phpbbConnection, flarumConnection);
     await migrateTopics(phpbbConnection, flarumConnection);
     await migrateDiscussions(phpbbConnection, flarumConnection);
-    await migrateUsers(phpbbConnection, flarumConnection);
+    await migrateUsersStats(phpbbConnection, flarumConnection);
 
     flarumConnection.end();
     phpbbConnection.end();
