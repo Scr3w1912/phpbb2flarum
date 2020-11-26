@@ -32,6 +32,9 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       SELECT * FROM ${PHPBB_DB_PREFIX}posts WHERE topic_id = '${parseInt(topic_id)}'
     `);
 
+    if (posts.length === 0 || (posts.length === 1 && posts[0].post_delete_time > 0))
+      return;
+
     await asyncForEach(posts, async (post, index) => {
 
       const { post_id, post_time, post_text, poster_id, post_delete_time } = post;

@@ -12,7 +12,7 @@ import { migrateUsersStats } from "./usersStats";
 
 export const debugQuery = false;
 
-export const FLARUM_DB_NAME = "flarum";
+export const FLARUM_DB_NAME = "flarum1";
 export const FLARUM_DB_PREFIX = "flarum_";
 export const PHPBB_DB_NAME = "psiconauti2";
 export const PHPBB_DB_PREFIX = "phpbb_";
