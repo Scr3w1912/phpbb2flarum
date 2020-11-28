@@ -1,6 +1,6 @@
 import moment from "moment";
 import { FLARUM_DB_PREFIX, PHPBB_DB_PREFIX } from "./convert";
-import { query, asyncForEach, formatPost, sqlEscape, slugify } from "./utils";
+import { query, asyncForEach, formatText, sqlEscape, slugify } from "./utils";
 
 export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
@@ -44,7 +44,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
 
       const posterId = poster_id === 1 ? 99999999 : poster_id;
       const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
-      const postText = sqlEscape(formatPost(post_text));
+      const postText = sqlEscape(formatText(post_text));
 
       if (!participants.includes(posterId))
         participants.push(posterId)
@@ -106,12 +106,13 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     if (lastPosterID == 0)
       lastPosterID = topic_poster;
 
+    const title = sqlEscape(formatText(topic_title));
     const slug = slugify(topic_title);
 
     try {
       const result = await query(flarumConnection, `
         INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
-        VALUES('${topic_id}', '${sqlEscape(topic_title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
+        VALUES('${topic_id}', '${sqlEscape(title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
       `);
 
       if (result) migratedTopics++;

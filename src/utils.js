@@ -76,12 +76,13 @@ export const slugify = (string) => {
 }
 
 // Formatta  la sintassi dei post di PHPBB nel formato che usa Flarum
-export const formatPost = (text) => {
+export const formatText = (text) => {
 
   const post = convertBBCodeToHTML(text)
     // Rimuovi tutti i simboli che non ci servono
     .replace(/#\:\w+#/g, "") // Rimuove le faccine
-    .replaceAll("&quot;", '\"') // Sostituisce le html quote
+    .replaceAll("&quot;", '\"') // Sostituisce le virgolette
+    .replaceAll("&apos;", '\'') // Sostituisce gli apostrofi
     .replace(/[[\/\!]*?[^\[\]]*?]/gsi, "") // Rimuove tutto quello incapsulato in parentesi quadre
     .replaceAll("\n", "")
 
