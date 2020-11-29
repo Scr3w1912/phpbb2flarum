@@ -43,7 +43,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
         return deletedPosts++;
 
       const posterId = poster_id === 1 ? 99999999 : poster_id;
-      const postDate = moment.unix(post_time).format('YYYY-MM-DD hh:mm:ss');
+      const postDate = moment.unix(post_time).utc().format('YYYY-MM-DD HH:mm:ss');
       const postText = sqlEscape(formatText(post_text));
 
       if (!participants.includes(posterId))
@@ -69,7 +69,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
       }
     });
 
-    const date = moment.unix(topic_time).format('YYYY-MM-DD hh:mm:ss');
+    const date = moment.unix(topic_time).utc().format('YYYY-MM-DD hh:mm:ss');
 
     // Linka il topic al tag
 
@@ -112,7 +112,7 @@ export const migrateTopics = async (phpbbConnection, flarumConnection) => {
     try {
       const result = await query(flarumConnection, `
         INSERT INTO ${FLARUM_DB_PREFIX}discussions (id, title, slug, created_at, comment_count, participant_count, first_post_id, last_post_id, user_id, last_posted_user_id, last_posted_at)
-        VALUES('${topic_id}', '${sqlEscape(title)}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
+        VALUES('${topic_id}', '${title}', '${slug}', '${date}', '${posts.length}', '${participants.length}', 1, 1, '${topic_poster}', '${lastPosterID}', '${date}')
       `);
 
       if (result) migratedTopics++;
